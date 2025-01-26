@@ -32,9 +32,10 @@
         protected virtual void Awake()
         {
             currentCard = GetComponent<CardController>();
-            currentCard.onCardDataChanged += UpdateView;
+            currentCard.onCardDataChanged += UpdateData;
+            currentCard.onCardClose += UpdateView;
 
-            currentCard.onCardOpen += OpenCard;
+            currentCard.onCardOpen += UpdateView;
 
             mainCardImage.sprite = currentCard.IsOpen ? faceSprite : backSprite;
 
@@ -43,10 +44,9 @@
             costText.gameObject.SetActive(currentCard.IsOpen);
         }
 
-
-        public void UpdateView()
+        public void UpdateData()
         {
-            if (CurrentCard.CurrentCardData != null)
+            if (currentCard.CurrentCardData != null)
             {
                 foreach (Image image in suitImages)
                 {
@@ -55,10 +55,13 @@
                     costText.color = currentCard.CurrentCardData.Suit.SuitColor;
                 }
             }
+
         }
 
-        public void OpenCard()
+        public void UpdateView()
         {
+            UpdateData();
+
             mainCardImage.sprite = currentCard.IsOpen ? faceSprite : backSprite;
 
             suitImages.ForEach(x => x.gameObject.SetActive(currentCard.IsOpen));
@@ -70,8 +73,9 @@
 
         private void OnDestroy()
         {
-            currentCard.onCardDataChanged -= UpdateView;
-            currentCard.onCardOpen -= OpenCard;
+            currentCard.onCardDataChanged -= UpdateData;
+            currentCard.onCardOpen -= UpdateView;
+            currentCard.onCardClose -= UpdateView;
         }
     }
 }

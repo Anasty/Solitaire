@@ -1,5 +1,6 @@
 ﻿namespace Anasty.Solitaire.Core
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
@@ -11,6 +12,8 @@
     [RequireComponent(typeof(Button))]
     public class Bank : MonoBehaviour
     {
+        public event Action onOpenBank = delegate { };
+
         [SerializeField]
         protected CombinationsGenerator generator = default;
 
@@ -23,6 +26,7 @@
         protected List<CardController> cardsInBank = new List<CardController>();
         protected Button button = default;
 
+        public int BankIndex => bankIndex;
         protected int bankIndex = 0;
 
         protected virtual void Awake()
@@ -30,6 +34,21 @@
             button = GetComponent<Button>();
             button.onClick.AddListener(OpenBank);
             generator.onCompleteGeneration += InitBank;
+        }
+
+        /// <summary>
+        /// Возвращает банк к началу игры
+        /// </summary>
+        public void ResetBank()
+        {
+            foreach (CardController card in cardsInBank)
+            {
+                card.gameObject.SetActive(true);
+            }
+
+            bankIndex = 0;
+
+            OpenBank();
         }
 
         protected void InitBank()
@@ -45,6 +64,8 @@
         {
             CardController newCard = Instantiate(prefab, transform);
 
+            card.Suit = generator.CardsData.GetRandomSuit();
+
             combination.AddCardInStartCombination(newCard);
             newCard.CurrentCardData = card;
             cardsInBank.Add(newCard);
@@ -59,7 +80,13 @@
                 cardsInBank[bankIndex].gameObject.SetActive(false);
 
                 bankIndex++;
+                onOpenBank();
             }
+        }
+
+        public bool IsBankEmpty()
+        {
+            return bankIndex == cardsInBank.Count;
         }
 
         protected virtual void OnDestroy()
