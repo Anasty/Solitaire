@@ -49,13 +49,11 @@
 
         public virtual void OpenCard()
         {
-            if (!IsOpen)
-            {
-                isOpen = true;
-                onCardOpen();
-            }
+            isOpen = true;
+            onCardOpen();
+
         }
-        public void CloseCard()
+        public virtual void CloseCard()
         {
             isOpen = false;
             onCardClose();

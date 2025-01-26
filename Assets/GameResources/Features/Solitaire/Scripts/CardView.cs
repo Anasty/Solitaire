@@ -28,11 +28,9 @@
         [SerializeField]
         protected Sprite backSprite = default;
 
-
         protected virtual void Awake()
         {
             currentCard = GetComponent<CardController>();
-            currentCard.onCardDataChanged += UpdateData;
             currentCard.onCardClose += UpdateView;
 
             currentCard.onCardOpen += UpdateView;
@@ -55,10 +53,9 @@
                     costText.color = currentCard.CurrentCardData.Suit.SuitColor;
                 }
             }
-
         }
 
-        public void UpdateView()
+        public virtual void UpdateView()
         {
             UpdateData();
 
@@ -68,7 +65,6 @@
 
             costText.gameObject.SetActive(currentCard.IsOpen);
 
-            //TODO: playAnimation
         }
 
         private void OnDestroy()

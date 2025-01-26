@@ -19,6 +19,7 @@
 
         protected Button button = default;
 
+        public CardController MainCardStack => mainCardStack;
         protected CardController mainCardStack = default;
 
         protected bool canSelect = default;
@@ -43,16 +44,22 @@
         {
             if (CanSelectCard())
             {
-                mainCardStack.CurrentCardData = CurrentCardData;
-                mainCardStack.OpenCard();
-                if (ParentCard != null)
-                {
-                    ParentCard.OpenCard();
-                }
-                isOpen = false;
-                gameObject.SetActive(false);
+                OnSuccessSelect();
+
                 onSelectCard();
             }
+        }
+
+        protected virtual void OnSuccessSelect()
+        {
+            mainCardStack.CurrentCardData = CurrentCardData;
+            mainCardStack.OpenCard();
+            if (ParentCard != null)
+            {
+                ParentCard.OpenCard();
+            }
+            isOpen = false;
+            gameObject.SetActive(false);
         }
 
         public bool CanSelectCard()
@@ -60,7 +67,7 @@
             return isOpen && (prevCost == mainCardStack.CurrentCardData.Cost || nextCost == mainCardStack.CurrentCardData.Cost);
         }
 
-        private void OnDestroy()
+        protected virtual void OnDestroy()
         {
             button.onClick.RemoveListener(OnSelectCard);
         }
