@@ -1,133 +1,143 @@
 ﻿namespace Anasty.Solitaire.Core
 {
-    using System.Collections;
+    using System;
     using System.Collections.Generic;
     using UnityEngine;
+    using Random = UnityEngine.Random;
 
     /// <summary>
     /// Инициализирует карты на поле
     /// </summary>
     public class FieldController : MonoBehaviour
     {
+        public event Action onAllCardsInited = delegate { };
+
+        public IReadOnlyList<CardController> AllCards => allCards;
+        protected List<InteractiveCardController> allCards = new List<InteractiveCardController>();
+
         [SerializeField]
-        protected CardsDataBase cardsData = default;
+        protected CardController mainCardStack = default;
 
         [SerializeField]
         protected CombinationsGenerator generator = default;
 
-        [SerializeField]
-        protected Bank bank = default;
+        [SerializeField, Range(1f, 5f)]
+        protected float gripRadiusMultiplayer = 2f;
 
-        [SerializeField]
-        protected List<CardController> allCards = new List<CardController>();
+        protected List<InteractiveCardController> lastCardsInStacks = new List<InteractiveCardController>();
 
-        [SerializeField, Range(0f, 2f)]
-        private float gripRadiusMultiplayer = 2f;
+        protected float minDistance = 0f;
+        protected float tempDistance = 0f;
 
-        private float lastMinDistance = float.MaxValue;
-
-        private List<CardController> combinationsCards = new List<CardController>();
-        private List<CardController> openedCards = new List<CardController>();
-
-        private void Start()
+        protected virtual void Start()
         {
-            allCards = new List<CardController>(GetComponentsInChildren<CardController>());
+            allCards = new List<InteractiveCardController>(GetComponentsInChildren<InteractiveCardController>());
 
-            foreach (CardController card in allCards)
+            foreach (InteractiveCardController card in allCards)
             {
-                FindParent(card);
+                FindNeighbours(card);
+                card.SetMainStack(mainCardStack);
             }
 
-            generator.GenerateCombinations();
+            generator.StartGenerateCombinations(allCards.Count);
 
             InitCombinations();
         }
 
         public void InitCombinations()
         {
+            List<InteractiveCardController> cardsStacks = new List<InteractiveCardController>(lastCardsInStacks);
+
             for (int j = 0; j < generator.combinations.Count; j++)
             {
-                bank.AddInBank(cardsData.allCards.Find(x => x.Cost == generator.combinations[j].cardsCostInCombination[0]));
-                for (int i = 1; i < generator.combinations[j].cardsCostInCombination.Count; i++)
+
+                for (int i = 1; i < generator.combinations[j].CardsCostInCombination.Count; i++)
                 {
-                    int rnd = Random.Range(0, combinationsCards.Count);
+                    int rnd = Random.Range(0, cardsStacks.Count);
 
-                    combinationsCards[rnd].currentCardData = cardsData.allCards.Find(x => x.Cost == generator.combinations[j].cardsCostInCombination[i]);
-                    combinationsCards[rnd] = combinationsCards[rnd].parentCard;
+                    CardData tempCardData = generator.CardsData.GetDataByCost(generator.combinations[j].CardsCostInCombination[i]);
+                    tempCardData.Suit = generator.CardsData.GetRandomSuit();
 
+                    cardsStacks[rnd].CurrentCardData = tempCardData;
 
+                    generator.combinations[j].AddCardInCombination(cardsStacks[rnd]);
+                    cardsStacks[rnd] = cardsStacks[rnd].ParentCard;
 
-                    if (combinationsCards[rnd] == null)
+                    if (cardsStacks[rnd] == null)
                     {
-                        combinationsCards.RemoveAt(rnd);
+                        cardsStacks.RemoveAt(rnd);
                     }
                 }
             }
 
-            foreach (CardController card in openedCards)
+            foreach (CardController card in lastCardsInStacks)
             {
                 card.OpenCard();
             }
-            bank.OpenBank();
+            onAllCardsInited();
         }
 
-        private void FindParent(CardController card)
+        protected void FindNeighbours(InteractiveCardController card)
         {
-            float minDistance = lastMinDistance < float.MaxValue ? lastMinDistance * gripRadiusMultiplayer : lastMinDistance;
-            float tempDistance = lastMinDistance * lastMinDistance;
+            minDistance = card.GetComponent<RectTransform>().sizeDelta.y;
 
-            CardController parent = default;
-            CardController child = default;
+            InteractiveCardController parent = default;
+            InteractiveCardController child = default;
 
             int index = allCards.FindIndex(x => x == card);
 
-            for (int i = index; i < allCards.Count; i++)
+            child = FindNearestInList(index, allCards.Count, card);
+
+            if (child != null && child.ParentCard == null)
+            {
+                child.ParentCard = card;
+                card.ChildCard = child;
+            }
+
+            parent = FindNearestInList(0, index, card);
+
+
+            if (parent != null && parent.ChildCard == null)
+            {
+                parent.ChildCard = card;
+                card.ParentCard = parent;
+            }
+
+            if (card.ChildCard == null)
+            {
+                lastCardsInStacks.Add(card);
+            }
+        }
+
+        protected InteractiveCardController FindNearestInList(int startIndex, int endIndex, InteractiveCardController card)
+        {
+            InteractiveCardController nearest = default;
+
+            for (int i = startIndex; i < endIndex; i++)
             {
                 if (allCards[i] != card)
                 {
-                    tempDistance = Vector3.Distance(card.transform.position, allCards[i].transform.position);
+                    tempDistance = Vector3.Distance(card.GetComponent<RectTransform>().position, allCards[i].GetComponent<RectTransform>().position);
+
                     if (tempDistance < minDistance)
                     {
-                        minDistance = tempDistance;
-                        child = allCards[i];
+                        if (nearest)
+                        {
+                            if (allCards[i].transform.GetSiblingIndex() < nearest.transform.GetSiblingIndex())
+                            {
+                                minDistance = tempDistance;
+                                nearest = allCards[i];
+                            }
+                        }
+                        else
+                        {
+                            minDistance = tempDistance;
+                            nearest = allCards[i];
+                        }
                     }
                 }
             }
-            if (child != null && child.parentCard == null)
-            {
-                child.parentCard = card;
-                card.childCard = child;
-            }
-
-            for (int i = 0; i < index; i++)
-            {
-                if (allCards[i] != card)
-                {
-                    tempDistance = Vector3.Distance(card.transform.position, allCards[i].transform.position);
-                    if (tempDistance < minDistance)
-                    {
-                        minDistance = tempDistance;
-                        parent = allCards[i];
-                    }
-                }
-            }
-
-            if (minDistance < lastMinDistance)
-            {
-                lastMinDistance = minDistance;
-            }
-
-            if (parent != null && parent.childCard == null)
-            {
-                parent.childCard = card;
-                card.parentCard = parent;
-            }
-
-
-            if (card.childCard == null)
-            {
-                openedCards.Add(card); combinationsCards.Add(card);
-            }
+            return nearest;
         }
     }
 }

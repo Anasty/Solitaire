@@ -1,9 +1,7 @@
 ﻿namespace Anasty.Solitaire.Core
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using UnityEngine;
 
     /// <summary>
     /// Сгенерированная комбинация из карточной последовательности
@@ -11,13 +9,47 @@
     [Serializable]
     public class Combination
     {
-        public List<int> cardsCostInCombination = new List<int>();
-        public float isUpCombination = 0f;
+        public IReadOnlyList<CardController> CardControllers => cardControllers;
+        protected List<CardController> cardControllers = new List<CardController>();
 
-        public float needChangeDirection = 0f;
+        public IReadOnlyList<int> CardsCostInCombination => cardsCostInCombination;
+        protected List<int> cardsCostInCombination = new List<int>();
 
-        public int combinationLenght = 0;
+        /// <summary>
+        /// Добавить в комбинацию следующую цену карты
+        /// </summary>
+        /// <param name="cost"></param>
+        public void AddCostInCombination(int cost) =>
+            cardsCostInCombination.Add(cost);
 
-        public int changeDirectionIndex = 0;
+        /// <summary>
+        /// Добавить карту принадлежащую комбинации
+        /// </summary>
+        /// <param name="cardController"></param>
+        public void AddCardInCombination(CardController cardController)
+        {
+            if (cardControllers.Count == 0)
+            {
+                cardControllers.Add(null);
+            }
+
+            cardControllers.Add(cardController);
+        }
+
+        /// <summary>
+        /// Добавить карту в стартовую позицию списка
+        /// </summary>
+        /// <param name="cardController"></param>
+        public void AddCardInStartCombination(CardController cardController)
+        {
+            if (cardControllers.Count == 0)
+            {
+                cardControllers.Add(cardController);
+            }
+            else
+            {
+                cardControllers[0] = cardController;
+            }
+        }
     }
 }

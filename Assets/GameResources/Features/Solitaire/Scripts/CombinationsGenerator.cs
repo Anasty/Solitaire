@@ -1,54 +1,34 @@
 ﻿namespace Anasty.Solitaire.Core
 {
-    using System.Collections;
-    using System.Collections.Generic;
     using UnityEngine;
+    using Random = UnityEngine.Random;
 
     /// <summary>
     /// Генератор случайных комбинаций для поля карт
     /// </summary>
-    public class CombinationsGenerator : MonoBehaviour
+    public class CombinationsGenerator : AbstractCombinationsGenerator
     {
         [SerializeField]
-        public List<Combination> combinations = new List<Combination>();
-
         protected int maxCombinationsCount = 7;
+        [SerializeField]
         protected int minCombinationsCount = 2;
 
+        [SerializeField]
         protected float chanceToUpCombination = 0.65f;
 
+        [SerializeField]
         protected float chanceToChangeDirection = 0.15f;
 
-        int lastCost = 0;
-
-        protected int freeCards = 32;
-
-        private void Start()
-        {
-            // GenerateCombination();
-        }
-
-
-        public void GenerateCombinations()
+        protected int lastCost = 0;
+        protected override void Generate()
         {
             while (freeCards > 0)
             {
                 Combination newCombination = new Combination();
-                newCombination.isUpCombination = Random.value;
-                newCombination.needChangeDirection = Random.value;
-                newCombination.combinationLenght = Random.Range(minCombinationsCount, maxCombinationsCount + 1);
-                bool needChangeDirection = newCombination.needChangeDirection < chanceToChangeDirection;
-                if (needChangeDirection)
-                {
-                    newCombination.changeDirectionIndex = Random.Range(0, newCombination.combinationLenght);
-                }
+                bool isUpCombination = Random.value < chanceToUpCombination;
+                bool needChangeDirection = Random.value < chanceToChangeDirection;
 
-                bool isUpCombination = newCombination.isUpCombination < chanceToUpCombination;
-
-
-
-                int combinationLenght = newCombination.combinationLenght;
-
+                int combinationLenght = Random.Range(minCombinationsCount, maxCombinationsCount + 1);
                 if (freeCards < maxCombinationsCount)
                 {
                     combinationLenght = freeCards;
@@ -57,19 +37,16 @@
                 freeCards -= combinationLenght;
 
                 int changeDirectionIndex = 0;
-
                 if (needChangeDirection)
                 {
-                    changeDirectionIndex = newCombination.changeDirectionIndex;
+                    changeDirectionIndex = Random.Range(0, combinationLenght);
                 }
 
                 int starCombinationCost = Random.Range(CardData.MIN_CARD_COST, CardData.MAX_CARD_COST);
-                lastCost = starCombinationCost;
-
-                newCombination.cardsCostInCombination.Add(starCombinationCost);
+                int lastCost = starCombinationCost;
+                newCombination.AddCostInCombination(starCombinationCost);
 
                 int direction = isUpCombination ? 1 : -1;
-
                 for (int i = 0; i < combinationLenght; i++)
                 {
                     if (needChangeDirection && changeDirectionIndex == i)
@@ -87,11 +64,10 @@
                         lastCost = CardData.MAX_CARD_COST;
                     }
 
-                    newCombination.cardsCostInCombination.Add(lastCost);
+                    newCombination.AddCostInCombination(lastCost);
                 }
                 combinations.Add(newCombination);
             }
-
         }
     }
 }
