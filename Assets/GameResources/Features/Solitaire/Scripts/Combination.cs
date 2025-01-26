@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using UnityEngine;
+    using UnityEngine.UI;
 
     /// <summary>
     /// Сгенерированная комбинация из карточной последовательности
@@ -49,6 +51,18 @@
             else
             {
                 cardControllers[0] = cardController;
+            }
+        }
+
+        /// <summary>
+        /// Меняет цвет карт комбинации
+        /// </summary>
+        /// <param name="color"></param>
+        public void ChangeColorForCards(Color color)
+        {
+            foreach (CardController card in cardControllers)
+            {
+                card.GetComponent<Image>().color = color;
             }
         }
     }

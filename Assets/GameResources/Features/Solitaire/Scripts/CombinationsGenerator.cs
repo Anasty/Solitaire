@@ -20,6 +20,16 @@
         protected float chanceToChangeDirection = 0.15f;
 
         protected int lastCost = 0;
+
+        [ContextMenu("ShowCombinations")]
+        protected void ShowCombinations()
+        {
+            foreach (Combination combination in combinations)
+            {
+                combination.ChangeColorForCards(new Color(Random.Range(0.2f, 0.8f), Random.Range(0.2f, 0.8f), Random.Range(0.2f, 0.8f), 1f));
+            }
+        }
+
         protected override void Generate()
         {
             while (freeCards > 0)

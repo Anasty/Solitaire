@@ -12,7 +12,7 @@
     [RequireComponent(typeof(Button))]
     public class InteractiveCardController : CardController
     {
-        public event Action<InteractiveCardController> onSelectCard = delegate { };
+        public event Action onSelectCard = delegate { };
 
         public InteractiveCardController ChildCard = default;
         public InteractiveCardController ParentCard = default;
@@ -20,6 +20,8 @@
         protected Button button = default;
 
         protected CardController mainCardStack = default;
+
+        protected bool canSelect = default;
 
         protected virtual void Awake()
         {
@@ -39,19 +41,23 @@
         /// </summary>
         public virtual void OnSelectCard()
         {
-            if (isOpen)
+            if (CanSelectCard())
             {
-                if (prevCost == mainCardStack.CurrentCardData.Cost || nextCost == mainCardStack.CurrentCardData.Cost)
+                mainCardStack.CurrentCardData = CurrentCardData;
+                mainCardStack.OpenCard();
+                if (ParentCard != null)
                 {
-                    mainCardStack.CurrentCardData = currentCardData;
-                    mainCardStack.OpenCard();
-                    if (ParentCard != null)
-                    {
-                        ParentCard.OpenCard();
-                    }
-                    gameObject.SetActive(false);
+                    ParentCard.OpenCard();
                 }
+                isOpen = false;
+                gameObject.SetActive(false);
+                onSelectCard();
             }
+        }
+
+        public bool CanSelectCard()
+        {
+            return isOpen && (prevCost == mainCardStack.CurrentCardData.Cost || nextCost == mainCardStack.CurrentCardData.Cost);
         }
 
         private void OnDestroy()

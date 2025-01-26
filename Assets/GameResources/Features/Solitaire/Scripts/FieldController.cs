@@ -15,6 +15,9 @@
         public IReadOnlyList<CardController> AllCards => allCards;
         protected List<InteractiveCardController> allCards = new List<InteractiveCardController>();
 
+        public IReadOnlyList<InteractiveCardController> LastCardsInStacks => lastCardsInStacks;
+        protected List<InteractiveCardController> lastCardsInStacks = new List<InteractiveCardController>();
+
         [SerializeField]
         protected CardController mainCardStack = default;
 
@@ -24,7 +27,6 @@
         [SerializeField, Range(1f, 5f)]
         protected float gripRadiusMultiplayer = 2f;
 
-        protected List<InteractiveCardController> lastCardsInStacks = new List<InteractiveCardController>();
 
         protected float minDistance = 0f;
         protected float tempDistance = 0f;
@@ -42,6 +44,22 @@
             generator.StartGenerateCombinations(allCards.Count);
 
             InitCombinations();
+        }
+
+        /// <summary>
+        /// Возвращает поле в начальное состояние
+        /// </summary>
+        public void ResetField()
+        {
+            foreach (CardController card in allCards)
+            {
+                card.CloseCard();
+                card.gameObject.SetActive(true);
+            }
+            foreach (CardController card in lastCardsInStacks)
+            {
+                card.OpenCard();
+            }
         }
 
         public void InitCombinations()

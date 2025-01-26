@@ -11,6 +11,7 @@
         public event Action onCardDataChanged = delegate { };
 
         public event Action onCardOpen = delegate { };
+        public event Action onCardClose = delegate { };
 
         /// <summary>
         /// Текущая дата карты
@@ -48,8 +49,16 @@
 
         public virtual void OpenCard()
         {
-            isOpen = true;
-            onCardOpen();
+            if (!IsOpen)
+            {
+                isOpen = true;
+                onCardOpen();
+            }
+        }
+        public void CloseCard()
+        {
+            isOpen = false;
+            onCardClose();
         }
     }
 }
