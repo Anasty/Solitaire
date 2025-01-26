@@ -23,13 +23,13 @@
         protected List<InteractiveCardController> allCards = new List<InteractiveCardController>();
         protected int openCardsCount = 0;
 
-        protected virtual void Start()
+        protected virtual void Awake()
         {
             allCards = new List<InteractiveCardController>(cardsParent.GetComponentsInChildren<InteractiveCardController>());
 
             foreach (InteractiveCardController card in allCards)
             {
-                card.onCardOpen += OnOpenAnyCard;
+                card.onSelectCard += OnOpenAnyCard;
             }
         }
 
@@ -41,7 +41,7 @@
         protected void OnOpenAnyCard()
         {
             openCardsCount++;
-            if (openCardsCount == allCards.Count + 1)
+            if (openCardsCount == allCards.Count)
             {
                 UserInterfaceController.Instance.SetWindow(targetWindow, true);
                 onWinGame();
@@ -52,7 +52,7 @@
         {
             foreach (InteractiveCardController card in allCards)
             {
-                card.onCardOpen -= OnOpenAnyCard;
+                card.onSelectCard -= OnOpenAnyCard;
             }
         }
     }
