@@ -1,50 +1,27 @@
 ﻿namespace Anasty.Solitaire.Core
 {
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
     using UnityEngine;
-    using UnityEngine.UI;
 
     /// <summary>
     /// Контроллер карты на поле
     /// </summary>
     public class CardController : MonoBehaviour
     {
-        public event Action onInitController = delegate { };
+        public event Action onCardDataChanged = delegate { };
 
-        public CardData currentCardData = default;
-
-        public CardController childCard = default;
-        public CardController parentCard = default;
-        [SerializeField]
-        protected CardController target = default;
-
-        public Image mainCardImage = default;
-
-        public Sprite faceSprite = default;
-
-        public Text costText = default;
+        public event Action onCardOpen = delegate { };
 
         /// <summary>
-        /// Инициализируется карта в комбинации
+        /// Текущая дата карты
         /// </summary>
-        /// <param name="newCardData"></param>
-        public void Init(CardData newCardData)
+        public CardData CurrentCardData
         {
-            currentCardData = newCardData;
-            onInitController();
-            //TODO: это инициализация последовательности, до этого должно быть собрано положение текущей карты и указаны ее предки и потомки
-        }
-        int nextCost = 0;
-        int prevCost = 0;
-        /// <summary>
-        /// Карта была выбрана пользователем
-        /// </summary>
-        public void OnSelectCard()
-        {
-            if (isOpened)
+            get => currentCardData;
+            set
             {
+                currentCardData = value;
+
                 nextCost = currentCardData.Cost + 1;
                 if (nextCost > CardData.MAX_CARD_COST)
                 {
@@ -56,27 +33,23 @@
                     prevCost = CardData.MAX_CARD_COST;
                 }
 
-                if (prevCost == target.currentCardData.Cost || nextCost == target.currentCardData.Cost)
-                {
-                    target.currentCardData = currentCardData;
-                    target.OpenCard();
-                    if (parentCard != null)
-                    {
-                        parentCard.OpenCard();
-                    }
-                    gameObject.SetActive(false);
-                }
+                onCardDataChanged();
             }
         }
+        protected CardData currentCardData = default;
 
-        private bool isOpened = false;
+        public bool IsOpen => isOpen;
+        protected bool isOpen = false;
 
-        public void OpenCard()
+        public int NextCost => nextCost;
+        protected int nextCost = 0;
+        public int PrevCost => prevCost;
+        protected int prevCost = 0;
+
+        public virtual void OpenCard()
         {
-
-            isOpened = true;
-            mainCardImage.sprite = faceSprite;
-            costText.text = currentCardData.View;
+            isOpen = true;
+            onCardOpen();
         }
     }
 }
